@@ -1,0 +1,92 @@
+module FunctionalGraph
+       (
+         Graph(..)
+         , addNode
+       ) where
+
+data Node nodeLabelType = Node {
+       nodeNum :: Int
+       , nodeLabel :: nodeLabelType
+       } deriving (Show, Eq)
+         
+-- Node tests 
+n1 = Node 0 1.0
+t1 = nodeNum n1 == 0
+t2 = nodeLabel n1 == 1.0
+
+
+-- We have parents and children nodes, since we are dealing with
+-- digraphs and we want to create an inductive library
+
+type Parents nodeLabelType edgeLabelType = [Parent nodeLabelType edgeLabelType]
+
+data Parent nodeLabelType edgeLabelType = Parent {
+  parentNode :: Node nodeLabelType
+  , parentEdgeLabel :: edgeLabelType
+    } deriving (Show, Eq)
+               
+p1 = Parent n1 4.0               
+t3 = parentNode p1 == n1
+t4 = parentEdgeLabel p1 == 4.0
+
+
+type Children nodeLabelType edgeLabelType = [Child nodeLabelType edgeLabelType]
+data Child nodeLabelType edgeLabelType = Child {
+  childNode :: Node nodeLabelType
+  , childEdgeLabel :: edgeLabelType
+    } deriving (Show, Eq)
+               
+c1 = Child n1 5.0
+t5 = childNode c1 == n1
+t6 = childEdgeLabel c1 == 5.0
+
+
+
+data Graph nodeLabelType edgeLabelType = 
+  Empty
+  | GraphAnd {
+    graphContext :: Context nodeLabelType edgeLabelType
+    , graphSubgraph :: Graph nodeLabelType edgeLabelType
+      } deriving (Eq, Show)
+
+data Context nodeLabelType edgeLabelType = Context {
+  contextParents :: Parents nodeLabelType edgeLabelType
+  , contextNode :: Node nodeLabelType
+  , contextChildren :: Children nodeLabelType edgeLabelType
+    } deriving (Eq, Show)
+                                           
+gEmpty = Empty :: Graph Double Double
+
+-- represent the graph n1 with two self-loops
+
+g1 = GraphAnd (Context [p1] n1 [c1]) gEmpty
+  
+
+-- we now have to define graph construction functions
+-- addNode and addEdge which add a node and an edge respectively
+
+-- the order of the arguments is important here because a graph
+-- implicitly contains the type of its edges, and the addNode
+-- operation needs to add in a context which means that we need to
+-- know the type of the edges connected a node from its parents and to
+-- its children, that type is associated with the graph edge label
+-- types, hence the graph must be the first argument of the addNode
+-- because the typing needs to be clear
+
+addNode :: (Eq nodeLabelType) => (Eq edgeLabelType) =>
+  Graph nodeLabelType edgeLabelType
+  -> Node nodeLabelType
+  -> Graph nodeLabelType edgeLabelType
+addNode g n = GraphAnd (Context [] n []) g
+
+g2 = GraphAnd (Context [] n1 []) gEmpty
+t7 = addNode gEmpty n1 == g2
+
+t = t1 && t2 && t3 && t4 && t5 && t6 && t7
+
+-- data Graph a b
+
+-- data Graph a b = Empty 
+--                | GraphAnd (Context a b) graph
+                 
+-- data Context a b = Edges
